@@ -39,6 +39,7 @@ const STATUS_DISPLAY: Record<LeadStatus, string> = {
   Qualified:      "Qualified",
   Booked:         "Booked",
   Showed:         "Showed",
+  Sold:           "Sold",
   NoShow:         "No Show",
   OptedOut:       "Opted Out",
   DNC:            "DNC",

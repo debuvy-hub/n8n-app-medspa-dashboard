@@ -92,7 +92,7 @@ const ALL_LEAD_STATUSES: LeadStatus[] = [
 
 const STATUS_DISPLAY: Record<LeadStatus, string> = {
   New: "New", Contacted: "Contacted", Replied: "Replied",
-  Qualified: "Qualified", Booked: "Booked", Showed: "Showed",
+  Qualified: "Qualified", Booked: "Booked", Showed: "Showed", Sold: "Sold",
   NoShow: "No Show", ReOptInPending: "Re-Opt-In Pending",
   OptedOut: "Opted Out", DNC: "DNC",
 };
