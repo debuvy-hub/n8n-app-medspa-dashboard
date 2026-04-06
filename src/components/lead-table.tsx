@@ -51,6 +51,16 @@ interface SmsDrawerProps {
 }
 
 function SmsDrawer({ lead, onClose }: SmsDrawerProps) {
+  const optInDate = lead.optInTimestamp
+    ? new Date(lead.optInTimestamp).toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+      })
+    : "—";
+  const lastConfidence = lead.smsHistory
+    ?.slice()
+    .reverse()
+    .find((m) => m.aiConfidence !== undefined)?.aiConfidence;
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -68,6 +78,22 @@ function SmsDrawer({ lead, onClose }: SmsDrawerProps) {
                   style={{ color: "#6B6B8A" }}>
             <X className="w-4 h-4" />
           </button>
+        </div>
+
+        {/* Consent + service metadata */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-5 py-3"
+             style={{ borderBottom: "1px solid #1E1E30", background: "#0B0B16" }}>
+          {[
+            { label: "Service Interest", value: lead.serviceInterest ?? "—" },
+            { label: "Opt-In Source",    value: lead.optInSource ? `${lead.optInSource} (${lead.consentMethod})` : "—" },
+            { label: "Opt-In Date",      value: optInDate },
+            { label: "AI Confidence",    value: lastConfidence !== undefined ? `${Math.round(lastConfidence * 100)}% (last msg)` : "—" },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <p className="text-xs" style={{ color: "#4A4A6A" }}>{label}</p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: "#9999B8" }}>{value}</p>
+            </div>
+          ))}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">

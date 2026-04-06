@@ -21,18 +21,24 @@ export interface LeadPipeline {
   qualified: number;
   booked: number;
   showed: number;
+  sold?: number;
 }
 
 export interface DashboardKpis {
   totalLeads: KpiMetric;
   messagesSent: KpiMetric;
-  replyRate: KpiMetric;       // percent
+  replyRate: KpiMetric;        // percent
   reactivationRate: KpiMetric; // percent
   bookings: KpiMetric;
-  showRate: KpiMetric;        // percent
-  estimatedRevenue: KpiMetric; // currency
-  aiFallbackRate: KpiMetric;  // percent
-  optOutRate: KpiMetric;      // percent
+  showRate: KpiMetric;         // percent
+  estimatedRevenue: KpiMetric; // currency — projected from booked pipeline
+  collectedRevenue: KpiMetric; // currency — actual collected (POS integration Phase 2)
+  netRoi: KpiMetric;           // number — e.g. 4.2 = 4.2x return
+  costPerBooked: KpiMetric;    // currency
+  costPerShowed: KpiMetric;    // currency
+  aiFallbackRate: KpiMetric;   // percent
+  optOutRate: KpiMetric;       // percent
+  consentCoverage: KpiMetric;  // percent
 }
 
 export interface DashboardData {
@@ -51,6 +57,7 @@ export type LeadStatus =
   | "Qualified"
   | "Booked"
   | "Showed"
+  | "Sold"
   | "NoShow"
   | "OptedOut"
   | "DNC"
@@ -75,6 +82,7 @@ export interface Lead {
   optInSource: string;
   optInTimestamp: string | null;
   consentMethod: string;
+  serviceInterest?: string;
   dnc: boolean;
   staleLeadFlag: boolean;
   aiConfidence: number | null;

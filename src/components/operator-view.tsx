@@ -16,29 +16,40 @@ const PRIORITY_ORDER = [
 
 type PriorityStatus = (typeof PRIORITY_ORDER)[number];
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  Replied:        { label: "Replied — needs human",   color: "#EF4444" }, // red
-  NoShow:         { label: "No-show — recovery",       color: "#F59E0B" }, // amber
-  New:            { label: "New — not contacted",      color: "#3B82F6" }, // blue
-  ReOptInPending: { label: "Re-opt-in pending",        color: "#8B5CF6" }, // purple
-  Contacted:      { label: "Stale — follow-up needed", color: "#6366F1" }, // indigo
+const STATUS_META: Record<string, {
+  color: string;
+  badge: string;
+  badgeBg: string;
+  action: string;
+}> = {
+  Replied:        { color: "#EF4444", badge: "HOT",       badgeBg: "rgba(239,68,68,0.15)",    action: "Call or text back now" },
+  NoShow:         { color: "#F59E0B", badge: "RECOVERY",  badgeBg: "rgba(245,158,11,0.15)",   action: "Offer rebooking — use discount" },
+  New:            { color: "#3B82F6", badge: "NEW",       badgeBg: "rgba(59,130,246,0.15)",   action: "Send first outreach" },
+  ReOptInPending: { color: "#8B5CF6", badge: "PENDING",   badgeBg: "rgba(139,92,246,0.15)",   action: "Awaiting consent re-confirm" },
+  Contacted:      { color: "#6366F1", badge: "FOLLOW-UP", badgeBg: "rgba(99,102,241,0.15)",   action: "Send follow-up message" },
 };
 
+function getTimeSinceColor(dateStr: string | null): string {
+  if (!dateStr) return "#6B6B8A";
+  const hoursAgo = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60);
+  if (hoursAgo < 2) return "#EF4444";
+  if (hoursAgo < 8) return "#F59E0B";
+  return "#6B6B8A";
+}
+
 function LeadWorkQueue({ leads }: { leads: Lead[] }) {
-  // Sort by priority, then filter to actionable statuses
   const actionable = leads
     .filter(
       (l) =>
         PRIORITY_ORDER.includes(l.status as PriorityStatus) &&
-        !l.dnc &&
-        l.status !== "OptedOut"
+        !l.dnc
     )
     .sort((a, b) => {
       const ai = PRIORITY_ORDER.indexOf(a.status as PriorityStatus);
       const bi = PRIORITY_ORDER.indexOf(b.status as PriorityStatus);
       return ai - bi;
     })
-    .slice(0, 5);
+    .slice(0, 8);
 
   return (
     <div
@@ -51,7 +62,7 @@ function LeadWorkQueue({ leads }: { leads: Lead[] }) {
             Lead Work Queue
           </p>
           <p className="text-xs mt-0.5" style={{ color: "#6B6B8A" }}>
-            Priority order — needs action
+            Priority order — {actionable.length} need action
           </p>
         </div>
         <Link
@@ -71,27 +82,43 @@ function LeadWorkQueue({ leads }: { leads: Lead[] }) {
       ) : (
         <div className="space-y-2">
           {actionable.map((lead) => {
-            const meta = STATUS_LABELS[lead.status] ?? { label: lead.status, color: "#9999B8" };
+            const meta = STATUS_META[lead.status] ?? {
+              color: "#9999B8",
+              badge: lead.status,
+              badgeBg: "rgba(153,153,184,0.15)",
+              action: "",
+            };
+            const timeColor = getTimeSinceColor(lead.lastContactDate);
             return (
               <div
                 key={lead.id}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                className="px-3 py-2.5 rounded-xl"
                 style={{ background: "#14142A" }}
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: "#E8E8F0" }}>
-                    {lead.firstName} {lead.lastName}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: meta.color }}>
-                    {meta.label}
-                  </p>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="text-xs font-bold px-1.5 py-0.5 rounded shrink-0"
+                      style={{ background: meta.badgeBg, color: meta.color, letterSpacing: "0.04em" }}
+                    >
+                      {meta.badge}
+                    </span>
+                    <p className="text-sm font-medium truncate" style={{ color: "#E8E8F0" }}>
+                      {lead.firstName} {lead.lastName}
+                    </p>
+                  </div>
+                  <span
+                    className="text-xs tabular-nums ml-3 shrink-0"
+                    style={{ color: timeColor }}
+                  >
+                    {formatRelativeDate(lead.lastContactDate)}
+                  </span>
                 </div>
-                <span
-                  className="text-xs tabular-nums ml-3 shrink-0"
-                  style={{ color: "#6B6B8A" }}
-                >
-                  {formatRelativeDate(lead.lastContactDate)}
-                </span>
+                {meta.action && (
+                  <p className="text-xs pl-0.5" style={{ color: "#6B6B8A" }}>
+                    → {meta.action}
+                  </p>
+                )}
               </div>
             );
           })}
@@ -128,7 +155,7 @@ export function OperatorView({
           icon={<Activity className="w-4 h-4" />}
         />
         <KpiCard
-          label="Qualification Rate"
+          label="Response Rate"
           metric={kpis.reactivationRate}
           accentColor="#8B5CF6"
           icon={<BarChart2 className="w-4 h-4" />}
@@ -149,6 +176,7 @@ export function OperatorView({
         <CompliancePanel
           optOutRate={kpis.optOutRate.value}
           aiFallbackRate={kpis.aiFallbackRate.value}
+          consentCoverage={kpis.consentCoverage.value}
         />
       </div>
 

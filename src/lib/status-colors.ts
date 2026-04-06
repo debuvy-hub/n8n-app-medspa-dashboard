@@ -12,6 +12,7 @@ export const STATUS_COLORS = {
   Qualified:      { bg: "rgba(6,182,212,0.12)",   text: "#06B6D4" }, // cyan  — positive progress
   Booked:         { bg: "rgba(16,185,129,0.12)",  text: "#10B981" }, // green — good outcome
   Showed:         { bg: "rgba(16,185,129,0.12)",  text: "#10B981" }, // green — best outcome
+  Sold:           { bg: "rgba(52,211,153,0.15)",  text: "#34D399" }, // emerald — revenue confirmed
   OptedOut:       { bg: "rgba(107,107,138,0.12)", text: "#6B6B8A" }, // gray  — terminal, no action
 } as const;
 

@@ -8,12 +8,14 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  TrendingDown,
 } from "lucide-react";
 import { KpiCard } from "@/components/kpi-card";
 import { RevenueChart } from "@/components/revenue-chart";
 import { FunnelChart } from "@/components/funnel-chart";
 import { NeedsActionCard } from "@/components/needs-action-card";
 import { LeadPoolBreakdown } from "@/components/lead-pool-breakdown";
+import { formatCurrency, getDelta } from "@/lib/utils";
 import type { DashboardData, KpiMetric, Lead, WorkflowInfo } from "@/lib/types";
 
 function SystemHealthCard({ workflows }: { workflows: WorkflowInfo[] }) {
@@ -102,6 +104,73 @@ function SystemHealthCard({ workflows }: { workflows: WorkflowInfo[] }) {
   );
 }
 
+// ─── Revenue Strip ────────────────────────────────────────────────────────────
+
+function TrendRow({ delta, suffix }: { delta: number; suffix: string }) {
+  const isUp = delta >= 0;
+  const color = isUp ? "#10B981" : "#EF4444";
+  const Icon = isUp ? TrendingUp : TrendingDown;
+  return (
+    <div className="flex items-center gap-1 mt-1">
+      <Icon className="w-3 h-3" style={{ color }} />
+      <span className="text-xs" style={{ color }}>
+        {isUp ? "+" : ""}{delta.toFixed(1)}{suffix} vs prior
+      </span>
+    </div>
+  );
+}
+
+function RevenueStrip({ collected, projected, netRoi }: {
+  collected: KpiMetric;
+  projected: KpiMetric;
+  netRoi: KpiMetric;
+}) {
+  const collectedDelta = getDelta(collected.value, collected.previousValue);
+  const projectedDelta = getDelta(projected.value, projected.previousValue);
+  const roiDelta = netRoi.value - netRoi.previousValue;
+
+  return (
+    <div
+      className="rounded-2xl p-5"
+      style={{ background: "#0F0F1A", border: "1px solid #1E1E30" }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <DollarSign className="w-4 h-4" style={{ color: "#34D399" }} />
+        <p className="text-sm font-semibold" style={{ color: "#E8E8F0" }}>Revenue</p>
+      </div>
+
+      <div className="grid grid-cols-3 divide-x" style={{ borderColor: "#1E1E30" }}>
+        <div className="pr-4">
+          <p className="text-xs mb-1" style={{ color: "#6B6B8A" }}>Collected</p>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: "#34D399" }}>
+            {formatCurrency(collected.value)}
+          </p>
+          <TrendRow delta={collectedDelta} suffix="%" />
+          <p className="text-xs mt-1.5" style={{ color: "#4A4A6A" }}>mock · POS Phase 2</p>
+        </div>
+
+        <div className="px-4">
+          <p className="text-xs mb-1" style={{ color: "#6B6B8A" }}>Projected</p>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: "#E8E8F0" }}>
+            {formatCurrency(projected.value)}
+          </p>
+          <TrendRow delta={projectedDelta} suffix="%" />
+          <p className="text-xs mt-1.5" style={{ color: "#4A4A6A" }}>from booked pipeline</p>
+        </div>
+
+        <div className="pl-4">
+          <p className="text-xs mb-1" style={{ color: "#6B6B8A" }}>Net ROI</p>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: "#F59E0B" }}>
+            {netRoi.value.toFixed(1)}x
+          </p>
+          <TrendRow delta={roiDelta} suffix="x" />
+          <p className="text-xs mt-1.5" style={{ color: "#4A4A6A" }}>return on spend</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function OwnerView({
   data,
   leads,
@@ -141,7 +210,14 @@ export function OwnerView({
 
   return (
     <div className="space-y-6">
-      {/* KPI grid — owner-first: outcomes, not activity */}
+      {/* Revenue strip — hero section */}
+      <RevenueStrip
+        collected={kpis.collectedRevenue}
+        projected={kpis.estimatedRevenue}
+        netRoi={kpis.netRoi}
+      />
+
+      {/* KPI grid — outcome metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
           label="Booked This Period"
@@ -154,12 +230,6 @@ export function OwnerView({
           metric={showedMetric}
           accentColor="#10B981"
           icon={<Users className="w-4 h-4" />}
-        />
-        <KpiCard
-          label="Revenue (Projected)"
-          metric={kpis.estimatedRevenue}
-          accentColor="#10B981"
-          icon={<DollarSign className="w-4 h-4" />}
         />
         <KpiCard
           label="Show Rate"
@@ -180,6 +250,24 @@ export function OwnerView({
           icon={<ShieldCheck className="w-4 h-4" />}
           invertTrend
           alertThreshold={{ value: 5, direction: "above", message: "Carrier filter risk" }}
+        />
+      </div>
+
+      {/* Cost per outcome row */}
+      <div className="grid grid-cols-2 gap-4">
+        <KpiCard
+          label="Cost per Booked"
+          metric={kpis.costPerBooked}
+          accentColor="#F59E0B"
+          icon={<DollarSign className="w-4 h-4" />}
+          invertTrend
+        />
+        <KpiCard
+          label="Cost per Showed"
+          metric={kpis.costPerShowed}
+          accentColor="#F59E0B"
+          icon={<DollarSign className="w-4 h-4" />}
+          invertTrend
         />
       </div>
 

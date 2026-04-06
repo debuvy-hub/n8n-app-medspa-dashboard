@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { TrendingUp, Download, Printer, Table, Activity, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { TrendingUp, Download, Printer, Table, Activity, ChevronDown, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
 import { mockLeads, mockExecutionLog, mockDashboard } from "@/data/mock";
-import { exportLeads, exportExecutionLog, exportWeeklyReport } from "@/lib/export";
+import { exportLeads, exportExecutionLog, exportWeeklyReport, exportRoiReport } from "@/lib/export";
 import { formatPercent } from "@/lib/utils";
 import { STATUS_COLORS } from "@/lib/status-colors";
 import type { LeadStatus } from "@/lib/status-colors";
@@ -614,6 +614,8 @@ function printCampaignReport(
 
 export default function ReportsPage() {
   const { kpis, weeklyTrends } = mockDashboard;
+  const collectedFmt = `$${kpis.collectedRevenue.value.toLocaleString()}`;
+  const roiFmt = `${kpis.netRoi.value.toFixed(1)}x`;
 
   // ── Campaign Performance ──
   const [roiFrom, setRoiFrom] = useState("");
@@ -681,9 +683,26 @@ export default function ReportsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
-        {/* ── Weekly ROI ── */}
+        {/* ── ROI Summary ── */}
+        <ReportCard
+          icon={<DollarSign className="w-5 h-5" />}
+          title="ROI Summary"
+          description="Collected revenue, projected pipeline, cost per outcome, and net return"
+          accentColor="#34D399"
+          stats={[
+            { label: "Collected revenue",  value: collectedFmt },
+            { label: "Net ROI",            value: roiFmt },
+            { label: "Cost per booked",    value: `$${kpis.costPerBooked.value}` },
+            { label: "Cost per showed",    value: `$${kpis.costPerShowed.value}` },
+          ]}
+          onDownload={() => exportRoiReport(weeklyTrends, kpis)}
+          downloadLabel="Download CSV"
+          downloadCount={weeklyTrends.length}
+        />
+
+        {/* ── Campaign Performance ── */}
         <ReportCard
           icon={<TrendingUp className="w-5 h-5" />}
           title="Campaign Performance"

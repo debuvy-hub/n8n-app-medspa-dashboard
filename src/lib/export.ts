@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import type { Lead, ExecutionLogEntry, WeeklyDataPoint } from "./types";
+import type { Lead, ExecutionLogEntry, WeeklyDataPoint, DashboardKpis } from "./types";
 
 export function downloadCsv(filename: string, data: Record<string, unknown>[]) {
   const csv = Papa.unparse(data);
@@ -55,4 +55,31 @@ export function exportWeeklyReport(data: WeeklyDataPoint[]) {
     "AI Fallbacks":  d.aiFallbacks,
   }));
   downloadCsv("weekly-report.csv", rows);
+}
+
+export function exportRoiReport(data: WeeklyDataPoint[], kpis: DashboardKpis) {
+  const costBooked = `$${kpis.costPerBooked.value}`;
+  const costShowed = `$${kpis.costPerShowed.value}`;
+
+  const dataRows = data.map((d) => ({
+    "Week":              d.week,
+    "Messages Sent":     String(d.messagesSent),
+    "Bookings":          String(d.bookings),
+    "Showed (est.)":     String(Math.round(d.bookings * (kpis.showRate.value / 100))),
+    "Projected Revenue": `$${d.revenue.toLocaleString()}`,
+    "Cost/Booked (avg)": costBooked,
+    "Cost/Showed (avg)": costShowed,
+  }));
+
+  const totalRow = {
+    "Week":              "TOTAL",
+    "Messages Sent":     String(data.reduce((s, d) => s + d.messagesSent, 0)),
+    "Bookings":          String(data.reduce((s, d) => s + d.bookings, 0)),
+    "Showed (est.)":     String(data.reduce((s, d) => s + Math.round(d.bookings * (kpis.showRate.value / 100)), 0)),
+    "Projected Revenue": `$${data.reduce((s, d) => s + d.revenue, 0).toLocaleString()}`,
+    "Cost/Booked (avg)": costBooked,
+    "Cost/Showed (avg)": costShowed,
+  };
+
+  downloadCsv("roi-report.csv", [...dataRows, totalRow]);
 }
