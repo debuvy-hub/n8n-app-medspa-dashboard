@@ -141,6 +141,15 @@ export function OperatorView({
   return (
     <div className="space-y-6">
       {/* KPI grid — operator: activity + AI health */}
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "#6B6B8A" }}>Activity</p>
+        <span className="text-xs px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(255,255,255,0.05)", color: "#6B6B8A" }}>
+          {weeklyTrends.length >= 2
+            ? `${weeklyTrends[0].week} – ${weeklyTrends[weeklyTrends.length - 1].week}`
+            : "Current period"}
+        </span>
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="Messages Sent"
