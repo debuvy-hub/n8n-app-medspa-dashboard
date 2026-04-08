@@ -1,14 +1,16 @@
 "use client";
 
-import { AlertTriangle, MessageSquare, UserX, UserPlus, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, MessageSquare, UserX, UserPlus, RefreshCw, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import type { Lead, WorkflowInfo } from "@/lib/types";
 
-interface ActionItem {
+interface ActionBucket {
   icon: React.ReactNode;
   label: string;
-  count: number;
   color: string;
+  leads: Lead[];
+  actionHint: string;
 }
 
 export function NeedsActionCard({
@@ -18,52 +20,53 @@ export function NeedsActionCard({
   leads: Lead[];
   workflows: WorkflowInfo[];
 }) {
-  const needsHuman = leads.filter(
-    (l) => l.status === "Replied" && l.aiFallbackUsed
-  ).length;
+  const [openLabel, setOpenLabel] = useState<string | null>(null);
 
-  const noShowRecovery = leads.filter((l) => l.status === "NoShow").length;
-
-  const newNotContacted = leads.filter(
-    (l) => l.status === "New" && !l.lastContactDate
-  ).length;
-
-  const reOptInPending = leads.filter(
-    (l) => l.status === "ReOptInPending"
-  ).length;
+  const needsHumanLeads   = leads.filter((l) => l.status === "Replied" && l.aiFallbackUsed);
+  const noShowLeads        = leads.filter((l) => l.status === "NoShow");
+  const newNotContactedLeads = leads.filter((l) => l.status === "New" && !l.lastContactDate);
+  const reOptInLeads       = leads.filter((l) => l.status === "ReOptInPending");
 
   const workflowErrors = workflows.filter(
     (w) => w.status === "error" || w.lastRunResult === "error"
   ).length;
 
-  const items: ActionItem[] = [
+  const buckets: ActionBucket[] = [
     {
       icon: <MessageSquare className="w-3.5 h-3.5" />,
       label: "Need human reply",
-      count: needsHuman,
       color: "#EF4444",
+      leads: needsHumanLeads,
+      actionHint: "Call or text back now",
     },
     {
       icon: <UserX className="w-3.5 h-3.5" />,
       label: "No-show recovery",
-      count: noShowRecovery,
       color: "#F59E0B",
+      leads: noShowLeads,
+      actionHint: "Offer rebooking — use discount",
     },
     {
       icon: <UserPlus className="w-3.5 h-3.5" />,
       label: "New, not contacted",
-      count: newNotContacted,
       color: "#3B82F6",
+      leads: newNotContactedLeads,
+      actionHint: "Send first outreach",
     },
     {
       icon: <RefreshCw className="w-3.5 h-3.5" />,
       label: "Re-opt-in pending",
-      count: reOptInPending,
       color: "#8B5CF6",
+      leads: reOptInLeads,
+      actionHint: "Awaiting consent re-confirm",
     },
-  ].filter((item) => item.count > 0);
+  ].filter((b) => b.leads.length > 0);
 
-  const totalActions = items.reduce((sum, i) => sum + i.count, 0) + workflowErrors;
+  const totalActions = buckets.reduce((sum, b) => sum + b.leads.length, 0) + workflowErrors;
+
+  function toggle(label: string) {
+    setOpenLabel((prev) => (prev === label ? null : label));
+  }
 
   return (
     <div
@@ -104,27 +107,60 @@ export function NeedsActionCard({
           All leads and workflows are in good shape
         </div>
       ) : (
-        <div className="space-y-2">
-          {items.map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between px-3 py-2 rounded-lg"
-              style={{ background: "#14142A" }}
-            >
-              <div className="flex items-center gap-2" style={{ color: item.color }}>
-                {item.icon}
-                <span className="text-xs" style={{ color: "#9999B8" }}>
-                  {item.label}
-                </span>
+        <div className="space-y-1.5">
+          {buckets.map((bucket) => {
+            const isOpen = openLabel === bucket.label;
+            return (
+              <div key={bucket.label}>
+                <button
+                  onClick={() => toggle(bucket.label)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors hover:bg-white/5"
+                  style={{ background: "#14142A" }}
+                >
+                  <div className="flex items-center gap-2" style={{ color: bucket.color }}>
+                    {bucket.icon}
+                    <span className="text-xs" style={{ color: "#9999B8" }}>
+                      {bucket.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded"
+                      style={{ background: `${bucket.color}18`, color: bucket.color }}
+                    >
+                      {bucket.leads.length}
+                    </span>
+                    <ChevronDown
+                      className="w-3 h-3 transition-transform"
+                      style={{
+                        color: "#6B6B8A",
+                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      }}
+                    />
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="mt-1 ml-3 space-y-1">
+                    {bucket.leads.map((lead) => (
+                      <div
+                        key={lead.id}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg"
+                        style={{ background: "#0C0C18", borderLeft: `2px solid ${bucket.color}40` }}
+                      >
+                        <span className="text-xs font-medium" style={{ color: "#E8E8F0" }}>
+                          {lead.firstName} {lead.lastName}
+                        </span>
+                        <span className="text-xs" style={{ color: "#6B6B8A" }}>
+                          {bucket.actionHint}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <span
-                className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded"
-                style={{ background: `${item.color}18`, color: item.color }}
-              >
-                {item.count}
-              </span>
-            </div>
-          ))}
+            );
+          })}
 
           {workflowErrors > 0 && (
             <div

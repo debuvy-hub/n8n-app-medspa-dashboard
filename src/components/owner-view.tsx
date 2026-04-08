@@ -10,6 +10,7 @@ import {
   Clock,
   TrendingDown,
   ShoppingCart,
+  Percent,
 } from "lucide-react";
 import { KpiCard } from "@/components/kpi-card";
 import { RevenueChart } from "@/components/revenue-chart";
@@ -213,6 +214,18 @@ export function OwnerView({
     unit: "count",
   };
 
+  // Close rate — % of showed patients who purchased (Sold ÷ Showed)
+  const prevSold = soldMetric.previousValue;
+  const closeRateMetric: KpiMetric = {
+    value: leadPipeline.showed > 0
+      ? parseFloat(((leadPipeline.sold ?? 0) / leadPipeline.showed * 100).toFixed(1))
+      : 0,
+    previousValue: showedMetric.previousValue > 0
+      ? parseFloat((prevSold / showedMetric.previousValue * 100).toFixed(1))
+      : 0,
+    unit: "percent",
+  };
+
   return (
     <div className="space-y-6">
       {/* Revenue strip — hero section */}
@@ -257,6 +270,12 @@ export function OwnerView({
           metric={soldMetric}
           accentColor="#34D399"
           icon={<ShoppingCart className="w-4 h-4" />}
+        />
+        <KpiCard
+          label="Close Rate"
+          metric={closeRateMetric}
+          accentColor="#A78BFA"
+          icon={<Percent className="w-4 h-4" />}
         />
         <KpiCard
           label="Opt-Out Rate"
