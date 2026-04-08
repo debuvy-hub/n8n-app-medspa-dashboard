@@ -3,12 +3,13 @@ import {
   Users,
   DollarSign,
   Star,
-  TrendingUp,
   ShieldCheck,
+  TrendingUp,
   CheckCircle,
   XCircle,
   Clock,
   TrendingDown,
+  ShoppingCart,
 } from "lucide-react";
 import { KpiCard } from "@/components/kpi-card";
 import { RevenueChart } from "@/components/revenue-chart";
@@ -120,10 +121,11 @@ function TrendRow({ delta, suffix }: { delta: number; suffix: string }) {
   );
 }
 
-function RevenueStrip({ collected, projected, netRoi }: {
+function RevenueStrip({ collected, projected, netRoi, lastUpdated }: {
   collected: KpiMetric;
   projected: KpiMetric;
   netRoi: KpiMetric;
+  lastUpdated?: string;
 }) {
   const collectedDelta = getDelta(collected.value, collected.previousValue);
   const projectedDelta = getDelta(projected.value, projected.previousValue);
@@ -134,9 +136,22 @@ function RevenueStrip({ collected, projected, netRoi }: {
       className="rounded-2xl p-5"
       style={{ background: "#0F0F1A", border: "1px solid #1E1E30" }}
     >
-      <div className="flex items-center gap-2 mb-4">
-        <DollarSign className="w-4 h-4" style={{ color: "#34D399" }} />
-        <p className="text-sm font-semibold" style={{ color: "#E8E8F0" }}>Revenue</p>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-4 h-4" style={{ color: "#34D399" }} />
+          <p className="text-sm font-semibold" style={{ color: "#E8E8F0" }}>Revenue</p>
+        </div>
+        {lastUpdated && (
+          <span className="text-xs tabular-nums" style={{ color: "#4A4A6A" }}>
+            Updated{" "}
+            {new Date(lastUpdated).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-3 divide-x" style={{ borderColor: "#1E1E30" }}>
@@ -191,21 +206,11 @@ export function OwnerView({
     unit: "count",
   };
 
-  // Booking conversion rate: booked / qualified
-  const prevQualified = Math.round(
-    (kpis.reactivationRate.previousValue / 100) * kpis.totalLeads.previousValue
-  );
-  const bookingRateMetric: KpiMetric = {
-    value: parseFloat(
-      ((leadPipeline.booked / leadPipeline.qualified) * 100).toFixed(1)
-    ),
-    previousValue:
-      prevQualified > 0
-        ? parseFloat(
-            ((kpis.bookings.previousValue / prevQualified) * 100).toFixed(1)
-          )
-        : 0,
-    unit: "percent",
+  // Sold metric — treatments purchased from showed patients
+  const soldMetric: KpiMetric = {
+    value: leadPipeline.sold ?? 0,
+    previousValue: Math.round(showedMetric.previousValue * 0.70),
+    unit: "count",
   };
 
   return (
@@ -215,6 +220,7 @@ export function OwnerView({
         collected={kpis.collectedRevenue}
         projected={kpis.estimatedRevenue}
         netRoi={kpis.netRoi}
+        lastUpdated={data.lastUpdated}
       />
 
       {/* KPI grid — outcome metrics */}
@@ -247,10 +253,10 @@ export function OwnerView({
           icon={<Star className="w-4 h-4" />}
         />
         <KpiCard
-          label="Booking Rate"
-          metric={bookingRateMetric}
-          accentColor="#8B5CF6"
-          icon={<TrendingUp className="w-4 h-4" />}
+          label="Sold"
+          metric={soldMetric}
+          accentColor="#34D399"
+          icon={<ShoppingCart className="w-4 h-4" />}
         />
         <KpiCard
           label="Opt-Out Rate"
@@ -259,24 +265,6 @@ export function OwnerView({
           icon={<ShieldCheck className="w-4 h-4" />}
           invertTrend
           alertThreshold={{ value: 5, direction: "above", message: "Carrier filter risk" }}
-        />
-      </div>
-
-      {/* Cost per outcome row */}
-      <div className="grid grid-cols-2 gap-4">
-        <KpiCard
-          label="Cost per Booked"
-          metric={kpis.costPerBooked}
-          accentColor="#F59E0B"
-          icon={<DollarSign className="w-4 h-4" />}
-          invertTrend
-        />
-        <KpiCard
-          label="Cost per Showed"
-          metric={kpis.costPerShowed}
-          accentColor="#F59E0B"
-          icon={<DollarSign className="w-4 h-4" />}
-          invertTrend
         />
       </div>
 

@@ -59,27 +59,28 @@ export function KpiCard({ label, metric, accentColor = "#6366F1", icon, alertThr
           )}
         </div>
 
-        <p
-          className="text-3xl font-bold tracking-tight tabular-nums"
-          style={{ color: isAlerting ? "#F59E0B" : "#E8E8F0" }}
-        >
-          {formatValue(metric)}
-        </p>
-
-        <div className="flex items-center gap-1.5 mt-2">
-          {isNeutral ? (
-            <Minus className="w-3.5 h-3.5" style={{ color: "#6B6B8A" }} />
-          ) : isPositive ? (
-            <TrendingUp className="w-3.5 h-3.5" style={{ color: isGood ? "#10B981" : "#EF4444" }} />
-          ) : (
-            <TrendingDown className="w-3.5 h-3.5" style={{ color: isGood ? "#10B981" : "#EF4444" }} />
-          )}
-          <span
-            className="text-xs font-medium tabular-nums"
-            style={{ color: isNeutral ? "#6B6B8A" : isGood ? "#10B981" : "#EF4444" }}
+        <div className="flex items-baseline gap-2 mt-1">
+          <p
+            className="text-3xl font-bold tracking-tight tabular-nums"
+            style={{ color: isAlerting ? "#F59E0B" : "#E8E8F0" }}
           >
-            {isNeutral ? "No change" : `${isPositive ? "+" : ""}${delta.toFixed(1)}% vs last week`}
-          </span>
+            {formatValue(metric)}
+          </p>
+          <div className="flex items-center gap-1">
+            {isNeutral ? (
+              <Minus className="w-3 h-3" style={{ color: "#6B6B8A" }} />
+            ) : isPositive ? (
+              <TrendingUp className="w-3 h-3" style={{ color: isGood ? "#10B981" : "#EF4444" }} />
+            ) : (
+              <TrendingDown className="w-3 h-3" style={{ color: isGood ? "#10B981" : "#EF4444" }} />
+            )}
+            <span
+              className="text-xs font-medium tabular-nums"
+              style={{ color: isNeutral ? "#6B6B8A" : isGood ? "#10B981" : "#EF4444" }}
+            >
+              {isNeutral ? "—" : `${isPositive ? "+" : ""}${delta.toFixed(1)}%`}
+            </span>
+          </div>
         </div>
 
         {isAlerting && alertThreshold && (
