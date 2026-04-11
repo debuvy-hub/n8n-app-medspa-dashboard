@@ -17,6 +17,7 @@ import { RevenueChart } from "@/components/revenue-chart";
 import { FunnelChart } from "@/components/funnel-chart";
 import { NeedsActionCard } from "@/components/needs-action-card";
 import { LeadPoolBreakdown } from "@/components/lead-pool-breakdown";
+import { CampaignGoalCard } from "@/components/campaign-goal-card";
 import { formatCurrency, getDelta } from "@/lib/utils";
 import type { DashboardData, KpiMetric, Lead, WorkflowInfo } from "@/lib/types";
 
@@ -162,7 +163,7 @@ function RevenueStrip({ collected, projected, netRoi, lastUpdated }: {
             {formatCurrency(collected.value)}
           </p>
           <TrendRow delta={collectedDelta} suffix="%" />
-          <p className="text-xs mt-1.5" style={{ color: "#4A4A6A" }}>mock · POS Phase 2</p>
+          <p className="text-xs mt-1.5" style={{ color: "#4A4A6A" }} title="Actual collected revenue requires point-of-sale integration — on the roadmap.">POS sync · coming soon ⓘ</p>
         </div>
 
         <div className="px-4">
@@ -235,6 +236,9 @@ export function OwnerView({
         netRoi={kpis.netRoi}
         lastUpdated={data.lastUpdated}
       />
+
+      {/* Campaign goal — progress toward target */}
+      {data.campaignGoal && <CampaignGoalCard goal={data.campaignGoal} />}
 
       {/* KPI grid — outcome metrics */}
       <div className="flex items-center justify-between mb-2">

@@ -42,6 +42,12 @@ export const mockDashboard: DashboardData = {
     showed:     30,
     sold:       22,
   },
+  campaignGoal: {
+    label:    "April Reactivation",
+    target:   50,
+    achieved: 41,
+    metric:   "bookings",
+  },
 };
 
 // ─── Leads ───────────────────────────────────────────────────────────────────

@@ -41,11 +41,19 @@ export interface DashboardKpis {
   consentCoverage: KpiMetric;  // percent
 }
 
+export interface CampaignGoal {
+  label?: string;       // e.g. "April Reactivation"
+  target: number;
+  achieved: number;
+  metric: "bookings" | "showed" | "sold";
+}
+
 export interface DashboardData {
   kpis: DashboardKpis;
   weeklyTrends: WeeklyDataPoint[];
   leadPipeline: LeadPipeline;
   lastUpdated: string; // ISO timestamp
+  campaignGoal?: CampaignGoal;
 }
 
 // ─── Leads ──────────────────────────────────────────────────────────────────
